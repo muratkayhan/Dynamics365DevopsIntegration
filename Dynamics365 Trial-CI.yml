@@ -1,0 +1,75 @@
+# Variable Group 'Dynamics365.Variables' was defined in the Variables tab
+trigger:
+  branches:
+    include:
+    - refs/heads/master
+  batch: True
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    vmImage: windows-2019
+  steps:
+  - checkout: self
+  - task: VSBuild@1
+    displayName: Build solution **\*.sln
+    enabled: False
+  - task: MSCRMToolInstaller@12
+    displayName: Power DevOps Tool Installer
+  - task: MSCRMPing@12
+    displayName: Ping Environment
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+  - task: MSCRMPackSolution@12
+    displayName: Pack Solution
+    enabled: False
+    inputs:
+      unpackedFilesFolder: Dynamics365Trial.SolutionComponents/SolutionComponents
+      outputPath: $(build.artifactsdirectory)
+      localize: false
+  - task: MSCRMImportSolution@12
+    displayName: Import Solution
+    enabled: False
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionFile: $(build.artifactsdirectory)/devopssolution.zip
+  - task: MSCRMExportSolution@12
+    displayName: 'Export Solution: customizations'
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionName: customizations
+      exportManaged: true
+      exportUnmanaged: false
+  - task: MSCRMExportSolution@12
+    displayName: 'Export Solution: plugins'
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionName: plugins
+      exportManaged: true
+      exportUnmanaged: false
+  - task: MSCRMExportSolution@12
+    displayName: 'Export Solution: securityroles'
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionName: securityroles
+      exportManaged: true
+      exportUnmanaged: false
+  - task: MSCRMExportSolution@12
+    displayName: 'Export Solution: webresources'
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionName: webresources
+      exportManaged: true
+      exportUnmanaged: false
+  - task: MSCRMExportSolution@12
+    displayName: 'Export Solution: workflows'
+    inputs:
+      crmConnectionString: $(ConnectionString_Source)
+      solutionName: workflows
+      exportManaged: true
+      exportUnmanaged: false
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
+    inputs:
+      PathtoPublish: $(Build.binariesdirectory)
+...
